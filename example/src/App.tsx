@@ -1,31 +1,57 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-paper-select';
+import { StyleSheet, View } from 'react-native';
+import {
+  Provider as PaperProvider,
+  MD3LightTheme,
+  Text,
+} from 'react-native-paper';
 
-export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
+import { PaperSelect } from 'react-native-paper-select';
 
-  React.useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
+export const App = () => {
+  return (
+    <PaperProvider theme={MD3LightTheme}>
+      <View style={styles.screen}>
+        <SimpleExample />
+      </View>
+    </PaperProvider>
+  );
+};
+
+export default App;
+
+const simpleOptions = ['one', 'two', 'three'];
+
+const SimpleExample = () => {
+  const [selected, setSelected] = React.useState<string | undefined>(undefined);
 
   return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
+    <View style={styles.example}>
+      <Text variant="headlineMedium">Simple Example</Text>
+
+      <PaperSelect
+        options={simpleOptions}
+        value={selected}
+        onSelection={(value) => setSelected(value)}
+      />
+
+      <Text>Selected value: {selected}</Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 16,
   },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
+  example: {
+    flexShrink: 1,
+    alignItems: 'stretch',
+    marginBottom: 16,
   },
 });
