@@ -17,7 +17,7 @@ type SupportedPressableProps = Omit<PressableProps, 'children' | 'style'>;
 // TODO: Support more TextInput props like 'mode'
 type SupportedInputProps = Pick<
   TextInputProps,
-  'value' | 'error' | 'disabled' | 'style'
+  'label' | 'value' | 'error' | 'disabled' | 'style'
 >;
 
 export type TextInputAnchorProps = {
@@ -26,6 +26,9 @@ export type TextInputAnchorProps = {
 
   /** Delegate wrapping View's `onLayout` for Menu sizing */
   onLayout?: ViewProps['onLayout'];
+
+  /** testID to be used on tests. */
+  testID?: string;
 } & SupportedInputProps &
   SupportedPressableProps;
 
@@ -36,8 +39,10 @@ export const TextInputAnchor = (props: TextInputAnchorProps) => {
   const {
     active = false,
     onLayout,
+    testID,
 
     // TextInput props
+    label,
     value,
     error,
     disabled,
@@ -91,10 +96,13 @@ export const TextInputAnchor = (props: TextInputAnchorProps) => {
         onFocus={(e) => onFocus(e)}
         onBlur={(e) => onBlur(e)}
         style={styles.pressable}
+        accessibilityRole="combobox"
+        testID={testID ? `${testID}-pressable` : undefined}
         {...pressableProps}
       />
       <View pointerEvents={'none'}>
         <TextInput
+          label={label}
           value={value}
           editable={false}
           disabled={disabled}
@@ -119,6 +127,7 @@ export const TextInputAnchor = (props: TextInputAnchorProps) => {
             inputFocused || active ? styles.textInputFocusUnderline : undefined
           }
           style={[styles.textInput, inputStyle]}
+          testID={testID ? `${testID}-text-input` : undefined}
         />
       </View>
     </View>

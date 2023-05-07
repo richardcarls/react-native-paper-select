@@ -9,7 +9,7 @@ import {
 
 import { useTheme, Menu, Divider } from 'react-native-paper';
 
-import { TextInputAnchor } from './TextInputAnchor';
+import { TextInputAnchor, TextInputAnchorProps } from './TextInputAnchor';
 
 import { defaultLabelFn, defaultValueFn, optionCompare } from './util';
 
@@ -48,7 +48,7 @@ export type PaperSelectProps<T extends unknown> = {
    * - The value of the `label` property, if it exists; otherwise
    * - The option coersed to a string via `String()`
    */
-  labels?: (option: T) => string;
+  optionLabels?: (option: T) => string;
 
   /**
    * Returns a value for the given option
@@ -61,7 +61,7 @@ export type PaperSelectProps<T extends unknown> = {
    * - The value of the `value` or `id` properties, if one exists; otherwise
    * - The option coersed to a string via `String()`
    */
-  values?: (option: T) => string;
+  optionValues?: (option: T) => string;
 
   /**
    * Label to use for the optional "none" option (sets value to `undefined`)
@@ -78,7 +78,11 @@ export type PaperSelectProps<T extends unknown> = {
   onSelection?: (selected: T | undefined) => void;
 
   // TODO: onSelectionCommit
-} & Pick<ViewProps, 'onLayout'>;
+
+  /** testID to be used on tests. */
+  testID?: string;
+} & Pick<ViewProps, 'onLayout'> &
+  Omit<TextInputAnchorProps, 'value' | 'disabled' | 'error' | 'testID'>;
 
 /**
  * A component that allows users to make a selection from a list of options
@@ -113,12 +117,15 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     defaultValue,
     disabled = false,
     error = false,
-    labels = defaultLabelFn,
-    values = defaultValueFn,
+    optionLabels = defaultLabelFn,
+    optionValues = defaultValueFn,
     noneLabel = '(None)',
     onSelection,
 
     onLayout: otherOnLayout,
+    testID,
+
+    ...anchorProps
   } = props;
 
   const [uncontrolledValue, setUncontrolledValue] = React.useState<
@@ -199,11 +206,13 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
   const Anchor = (
     <TextInputAnchor
       active={menuVisible}
-      value={selected ? labels(selected) : ''}
+      value={selected ? optionLabels(selected) : ''}
       disabled={disabled}
       error={error}
       onPress={() => openMenu()}
       onLayout={(e) => onLayout(e)}
+      testID={testID ? testID : undefined}
+      {...anchorProps}
     />
   );
 
@@ -218,6 +227,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
             title={noneLabel}
             onPress={() => onOptionSelected(undefined)}
             titleStyle={styles.noneOptionText}
+            testID={testID ? `${testID}-none` : undefined}
           />
           {options && options.length ? <Divider /> : null}
         </React.Fragment>
@@ -230,19 +240,20 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
 
     for (let i = 0; i < options.length; i++) {
       const option = options[i]!!;
+      const optionValue =
+        optionValues !== undefined ? optionValues(option) : i.toString();
 
       items.push(
-        <React.Fragment
-          key={values !== undefined ? values(option) : i.toString()}
-        >
+        <React.Fragment key={optionValue}>
           <Menu.Item
-            title={labels(option)}
+            title={optionLabels(option)}
             onPress={() => onOptionSelected(option)}
             titleStyle={{
               color: optionCompare(option, selected)
                 ? paperTheme.colors.primary
                 : paperTheme.colors.onSurface,
             }}
+            testID={testID ? `${testID}-option-${optionValue}` : undefined}
           />
           {i < options.length - 1 ? <Divider /> : null}
         </React.Fragment>
@@ -260,6 +271,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
       anchorPosition="bottom"
       style={styles.menuContainer}
       contentStyle={styles.menu}
+      testID={testID ? `${testID}-menu` : undefined}
     >
       {renderOptions()}
     </Menu>

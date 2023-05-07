@@ -31,6 +31,7 @@ const SimpleExample = () => {
       <Text variant="headlineMedium">Simple Example</Text>
 
       <PaperSelect
+        label="Example"
         options={simpleOptions}
         value={selected}
         onSelection={(value) => setSelected(value)}
