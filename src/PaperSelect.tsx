@@ -1,67 +1,45 @@
 import * as React from 'react';
 
-import {
-  StyleSheet,
-  ViewProps,
-  Keyboard,
-  LayoutChangeEvent,
-} from 'react-native';
+import { Keyboard, Platform } from 'react-native';
 
-import { useTheme, Menu, Divider } from 'react-native-paper';
+import { TextInputAnchor } from './TextInputAnchor';
+import { DropdownMenu } from './DropdownMenu';
+import { ModalMenu } from './ModalMenu';
 
-import { TextInputAnchor, TextInputAnchorProps } from './TextInputAnchor';
+import { optionCompare, objectGetProperty } from './util';
 
-import { defaultLabelFn, defaultValueFn, optionCompare } from './util';
+export type PaperSelectOption = {
+  value: string;
+  label: string;
+};
 
-/**
- * Component props for `PaperSelect`
- *
- * @typeParam T - Option type
- */
-export type PaperSelectProps<T extends unknown> = {
-  // TODO: displayMode (ie: 'dropdown' for web, 'modal' for others)
+export type PaperSelectProps<T extends NonNullable<any>> = {
+  // TODO: multi
 
-  /** Array of options data */
-  options?: T[];
+  // renderInput?: 'text' | 'button' | 'chips' | (() => React.ReactElement);
+  renderInput?: 'text';
+
+  // renderMenu?: 'modal' | 'dropdown' | false | (() => React.ReactElement);
+  renderMenu?: 'modal' | 'dropdown' | false;
 
   /** The value to display in the component */
-  value?: T | undefined;
+  value?: T;
 
-  defaultValue?: T | undefined;
+  defaultValue?: T;
+
+  /** Array of options data */
+  options?: ReadonlyArray<T>;
+
+  label?: string;
 
   // TODO: nullable
-
-  /** If true, user won't be able to interact with the component. */
-  disabled?: boolean;
 
   /** Use error styles on the component */
   error?: boolean;
 
-  /**
-   * Returns a label for the given option
-   *
-   * @param option - The option to derive a label from
-   *
-   * @defaultValue
-   * When not defined:
-   * - If option is a string, it's value is also used for the label; otherwise
-   * - The value of the `label` property, if it exists; otherwise
-   * - The option coersed to a string via `String()`
-   */
-  optionLabels?: (option: T) => string;
+  // TODO: editable
 
-  /**
-   * Returns a value for the given option
-   *
-   * @param option - The option to derive a value from
-   *
-   * @defaultValue
-   * When not defined:
-   * - If option is a string, it's value is also used for the selection value; otherwise
-   * - The value of the `value` or `id` properties, if one exists; otherwise
-   * - The option coersed to a string via `String()`
-   */
-  optionValues?: (option: T) => string;
+  disabled?: boolean;
 
   /**
    * Label to use for the optional "none" option (sets value to `undefined`)
@@ -77,12 +55,24 @@ export type PaperSelectProps<T extends unknown> = {
    */
   onSelection?: (selected: T | undefined) => void;
 
+  /**
+   * Returns a value and label for the given option
+   *
+   * @param option - The option to derive a value and label from
+   *
+   * @defaultValue
+   * When not defined:
+   * - If option is a string, it's value is also used for the label; otherwise
+   * - The values of the `value` and `label` properties, if they exist; otherwise
+   * - The option is coersed to a string via `String()`
+   */
+  extractorFn?: (option: T) => PaperSelectOption;
+
   // TODO: onSelectionCommit
 
   /** testID to be used on tests. */
   testID?: string;
-} & Pick<ViewProps, 'onLayout'> &
-  Omit<TextInputAnchorProps, 'value' | 'disabled' | 'error' | 'testID'>;
+};
 
 /**
  * A component that allows users to make a selection from a list of options
@@ -110,33 +100,34 @@ export type PaperSelectProps<T extends unknown> = {
  * export default MyComponent;
  * ```
  */
-export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
+export const PaperSelect = <T extends NonNullable<any>>(
+  props: PaperSelectProps<T>
+) => {
   const {
-    options,
+    renderInput = 'text',
+    // TODO: If undefined, select based on OS env (and if renderInput is not 'chips')
+    renderMenu = Platform.OS === 'web' && 'document' in global
+      ? 'dropdown'
+      : 'modal',
     value: otherValue,
     defaultValue,
-    disabled = false,
+    options,
+    label,
     error = false,
-    optionLabels = defaultLabelFn,
-    optionValues = defaultValueFn,
+    disabled = false,
     noneLabel = '(None)',
     onSelection,
-
-    onLayout: otherOnLayout,
+    extractorFn = defaultExtractorFn,
     testID,
-
-    ...anchorProps
   } = props;
 
   const [uncontrolledValue, setUncontrolledValue] = React.useState<
     T | undefined
-  >(otherValue || defaultValue);
+  >(otherValue ?? defaultValue);
 
   // Use value from props instead of local state when input is controlled
   const isControlled = otherValue !== undefined;
-  const value: Readonly<T | undefined> = isControlled
-    ? otherValue
-    : uncontrolledValue;
+  const value = isControlled ? otherValue : uncontrolledValue;
 
   const [selected, setSelected] = React.useState<T | undefined>(() => {
     if (value === undefined) {
@@ -148,134 +139,106 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
       : undefined;
   });
   const [menuVisible, setMenuVisible] = React.useState(false);
-  const [menuWidth, setMenuWidth] = React.useState<number | undefined>(
-    undefined
-  );
-
-  const paperTheme = useTheme();
-
-  const openMenu = () => {
-    if (!disabled) {
-      // Close keyboard to make best use of screen space
-      Keyboard.dismiss();
-
-      setMenuVisible(true);
-    }
-  };
 
   // TODO: Better keyboard accessibility? (ie: up/down traversal, space open/select, esc close, etc.)
 
-  const onOptionSelected = (option: T | undefined) => {
-    setSelected(option);
+  const onSelectionConfirmed = (selection: T | undefined) => {
+    setSelected(selection);
 
     if (!isControlled) {
       // Keep track of value in local state when input is not controlled
       setUncontrolledValue(value);
     }
 
-    onSelection && onSelection(option);
+    onSelection && onSelection(selection);
     setMenuVisible(false);
   };
 
-  const onLayout = React.useCallback(
-    (e: LayoutChangeEvent) => {
-      setMenuWidth(e.nativeEvent.layout.width);
+  const openMenu = React.useCallback(() => {
+    if (renderMenu && !disabled) {
+      // Close keyboard to make best use of screen space
+      Keyboard.dismiss();
 
-      otherOnLayout && otherOnLayout(e);
-    },
-    [otherOnLayout]
-  );
+      setMenuVisible(true);
+    }
+  }, [renderMenu, disabled]);
 
-  const styles = React.useMemo(() => {
-    return StyleSheet.create({
-      menuContainer: {
-        width: menuWidth ? menuWidth : 'auto',
-      },
-      menu: {
-        borderTopStartRadius: 0,
-        borderTopEndRadius: 0,
-      },
-      noneOptionText: {
-        fontStyle: 'italic',
-        color: paperTheme.colors.onSurfaceDisabled,
-      },
-    });
-  }, [paperTheme, menuWidth]);
-
-  // The visible select component
   const Anchor = (
-    <TextInputAnchor
-      active={menuVisible}
-      value={selected ? optionLabels(selected) : ''}
-      disabled={disabled}
-      error={error}
-      onPress={() => openMenu()}
-      onLayout={(e) => onLayout(e)}
-      testID={testID ? testID : undefined}
-      {...anchorProps}
-    />
+    <>
+      {renderInput === 'text' ? (
+        <TextInputAnchor
+          active={menuVisible}
+          label={label}
+          value={selected ? extractorFn(selected).label : ''}
+          onPress={() => openMenu()}
+          disabled={disabled}
+          error={error}
+        />
+      ) : null}
+    </>
   );
-
-  // Renders Menu.Items for each option (and none option)
-  const renderOptions = () => {
-    const items: JSX.Element[] = [];
-
-    if (noneLabel) {
-      items.push(
-        <React.Fragment key="none">
-          <Menu.Item
-            title={noneLabel}
-            onPress={() => onOptionSelected(undefined)}
-            titleStyle={styles.noneOptionText}
-            testID={testID ? `${testID}-none` : undefined}
-          />
-          {options && options.length ? <Divider /> : null}
-        </React.Fragment>
-      );
-    }
-
-    if (options === undefined || options.length === 0) {
-      return items;
-    }
-
-    for (let i = 0; i < options.length; i++) {
-      const option = options[i]!!;
-      const optionValue =
-        optionValues !== undefined ? optionValues(option) : i.toString();
-
-      items.push(
-        <React.Fragment key={optionValue}>
-          <Menu.Item
-            title={optionLabels(option)}
-            onPress={() => onOptionSelected(option)}
-            titleStyle={{
-              color: optionCompare(option, selected)
-                ? paperTheme.colors.primary
-                : paperTheme.colors.onSurface,
-            }}
-            testID={testID ? `${testID}-option-${optionValue}` : undefined}
-          />
-          {i < options.length - 1 ? <Divider /> : null}
-        </React.Fragment>
-      );
-    }
-
-    return items;
-  };
 
   return (
-    <Menu
-      visible={menuVisible}
-      onDismiss={() => setMenuVisible(false)}
-      anchor={Anchor}
-      anchorPosition="bottom"
-      style={styles.menuContainer}
-      contentStyle={styles.menu}
-      testID={testID ? `${testID}-menu` : undefined}
-    >
-      {renderOptions()}
-    </Menu>
+    <>
+      {renderMenu === 'dropdown' ? (
+        <DropdownMenu
+          options={options}
+          selected={selected}
+          visible={menuVisible}
+          noneLabel={noneLabel}
+          extractorFn={extractorFn}
+          onSelection={onSelectionConfirmed}
+          onDismiss={() => setMenuVisible(false)}
+          testID={testID ? `${testID}-dropdown` : undefined}
+        >
+          {Anchor}
+        </DropdownMenu>
+      ) : null}
+
+      {renderMenu === 'modal' ? (
+        <>
+          <ModalMenu
+            options={options}
+            selected={selected}
+            visible={menuVisible}
+            label={label}
+            extractorFn={extractorFn}
+            onSelection={onSelectionConfirmed}
+            onDismiss={() => setMenuVisible(false)}
+            testID={testID ? `${testID}-modal` : undefined}
+          />
+          {Anchor}
+        </>
+      ) : null}
+    </>
   );
 };
 
 export default PaperSelect;
+
+const defaultExtractorFn = <T extends NonNullable<any>>(option?: T) => {
+  if (option === undefined) {
+    return { value: undefined, label: undefined };
+  }
+
+  if (typeof option === 'string') {
+    return { value: option, label: option };
+  }
+
+  let label, value;
+  if (typeof option === 'object' && option !== null) {
+    value =
+      objectGetProperty(option, 'value') ||
+      objectGetProperty(option, 'id') ||
+      objectGetProperty(option, 'key');
+
+    label = objectGetProperty(option, 'label');
+  }
+
+  value = value ?? String(option);
+
+  return {
+    label: label ?? value,
+    value,
+  };
+};

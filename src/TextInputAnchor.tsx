@@ -3,7 +3,6 @@ import * as React from 'react';
 import {
   StyleSheet,
   View,
-  ViewProps,
   Pressable,
   PressableProps,
   NativeSyntheticEvent,
@@ -17,15 +16,15 @@ type SupportedPressableProps = Omit<PressableProps, 'children' | 'style'>;
 // TODO: Support more TextInput props like 'mode'
 type SupportedInputProps = Pick<
   TextInputProps,
-  'label' | 'value' | 'error' | 'disabled' | 'style'
+  'value' | 'error' | 'disabled' | 'style'
 >;
 
 export type TextInputAnchorProps = {
   /** If true, style like an open select input */
   active?: boolean;
 
-  /** Delegate wrapping View's `onLayout` for Menu sizing */
-  onLayout?: ViewProps['onLayout'];
+  /** The text to use for the rendered and accessibility label. */
+  label?: string;
 
   /** testID to be used on tests. */
   testID?: string;
@@ -38,7 +37,6 @@ export type TextInputAnchorProps = {
 export const TextInputAnchor = (props: TextInputAnchorProps) => {
   const {
     active = false,
-    onLayout,
     testID,
 
     // TextInput props
@@ -91,12 +89,15 @@ export const TextInputAnchor = (props: TextInputAnchorProps) => {
   }, [error, paperTheme]);
 
   return (
-    <View onLayout={(e) => onLayout && onLayout(e)}>
+    <View
+      accessibilityRole="combobox"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled, expanded: active }}
+    >
       <Pressable
         onFocus={(e) => onFocus(e)}
         onBlur={(e) => onBlur(e)}
         style={styles.pressable}
-        accessibilityRole="combobox"
         testID={testID ? `${testID}-pressable` : undefined}
         {...pressableProps}
       />
@@ -107,7 +108,12 @@ export const TextInputAnchor = (props: TextInputAnchorProps) => {
           editable={false}
           disabled={disabled}
           right={
-            <TextInput.Icon icon={active ? 'chevron-up' : 'chevron-down'} />
+            <TextInput.Icon
+              icon={active ? 'chevron-up' : 'chevron-down'}
+              accessible={true}
+              accessibilityRole="none"
+              disabled={true}
+            />
           }
           theme={{
             colors: {

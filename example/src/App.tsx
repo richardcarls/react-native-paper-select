@@ -14,6 +14,7 @@ export const App = () => {
     <PaperProvider theme={MD3LightTheme}>
       <View style={styles.screen}>
         <SimpleExample />
+        <Example2 />
       </View>
     </PaperProvider>
   );
@@ -33,11 +34,38 @@ const SimpleExample = () => {
       <PaperSelect
         label="Example"
         options={simpleOptions}
-        value={selected}
         onSelection={(value) => setSelected(value)}
       />
 
       <Text>Selected value: {selected}</Text>
+    </View>
+  );
+};
+
+const example2Options = [
+  { id: 'e637939a-cf3e-45c4-a57c-0b2cf4f03d92', text: 'Option 1' },
+  { id: 'c4d81412-e97e-481e-8f15-7fabc28ff154', text: 'Option 2' },
+  { id: 'd848ec93-a112-4897-a092-01145b17702e', text: 'Option 3' },
+];
+
+const Example2 = () => {
+  const [selected, setSelected] = React.useState<
+    { id: string; text: string } | undefined
+  >(example2Options[0]);
+
+  return (
+    <View style={styles.example}>
+      <Text variant="headlineMedium">Example 2</Text>
+
+      <PaperSelect
+        label="Example 2"
+        options={example2Options}
+        defaultValue={example2Options[0]}
+        extractorFn={({ id, text }) => ({ value: id, label: text })}
+        onSelection={(option) => setSelected(option)}
+      />
+
+      <Text>Selected value: {selected?.text}</Text>
     </View>
   );
 };
