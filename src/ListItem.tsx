@@ -3,9 +3,9 @@ import React from 'react';
 import {
   StyleSheet,
   View,
-  ViewStyle,
+  type ViewStyle,
   Pressable,
-  PressableProps,
+  type PressableProps,
 } from 'react-native';
 
 export type ListItemVariants = 'one-line' | 'two-line' | 'three-line';

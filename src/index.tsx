@@ -1,2 +1,5 @@
-export { PaperSelect } from './PaperSelect';
-export type { PaperSelectProps } from './PaperSelect';
+export {
+  PaperSelect,
+  type PaperSelectProps,
+  type PaperSelectOption,
+} from './PaperSelect';

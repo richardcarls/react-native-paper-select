@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { StyleSheet, View, LayoutChangeEvent } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
 import { useTheme, Menu, Divider } from 'react-native-paper';
 

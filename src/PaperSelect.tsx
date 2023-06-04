@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { Keyboard, Platform } from 'react-native';
+import { View, Keyboard, Platform } from 'react-native';
 
 import { TextInputAnchor } from './TextInputAnchor';
 import { DropdownMenu } from './DropdownMenu';
@@ -46,7 +46,7 @@ export type PaperSelectProps<T extends NonNullable<any>> = {
    *
    * @defaultValue '(None)'
    */
-  noneLabel?: String;
+  noneOption?: String | false;
 
   /**
    * Callback that is called when the component's selection changes.
@@ -80,7 +80,7 @@ export type PaperSelectProps<T extends NonNullable<any>> = {
  * ## Usage
  * ```js
  * import * as React from 'react';
- * import { PaperSelect } from 'react-native-paper-select';
+ * import { PaperSelect } from '@rcarls/react-native-paper-select';
  *
  * const options = ['one', 'two', 'three'];
  *
@@ -115,7 +115,7 @@ export const PaperSelect = <T extends NonNullable<any>>(
     label,
     error = false,
     disabled = false,
-    noneLabel = '(None)',
+    noneOption = '(None)',
     onSelection,
     extractorFn = defaultExtractorFn,
     testID,
@@ -129,23 +129,15 @@ export const PaperSelect = <T extends NonNullable<any>>(
   const isControlled = otherValue !== undefined;
   const value = isControlled ? otherValue : uncontrolledValue;
 
-  const [selected, setSelected] = React.useState<T | undefined>(() => {
-    if (value === undefined) {
-      return value;
-    }
-
-    return options?.some((option) => optionCompare(option, value))
-      ? value
-      : undefined;
-  });
   const [menuVisible, setMenuVisible] = React.useState(false);
 
   // TODO: Better keyboard accessibility? (ie: up/down traversal, space open/select, esc close, etc.)
 
   const onSelectionConfirmed = (selection: T | undefined) => {
-    setSelected(selection);
-
-    if (!isControlled) {
+    if (
+      !isControlled &&
+      options?.some((option) => optionCompare(option, value))
+    ) {
       // Keep track of value in local state when input is not controlled
       setUncontrolledValue(value);
     }
@@ -169,23 +161,31 @@ export const PaperSelect = <T extends NonNullable<any>>(
         <TextInputAnchor
           active={menuVisible}
           label={label}
-          value={selected ? extractorFn(selected).label : ''}
+          value={value ? extractorFn(value).label : ''}
           onPress={() => openMenu()}
           disabled={disabled}
           error={error}
+          testID={testID ? `${testID}-anchor` : undefined}
         />
       ) : null}
     </>
   );
 
   return (
-    <>
+    <View
+      accessible={true}
+      accessibilityRole="combobox"
+      accessibilityLabel={label}
+      accessibilityValue={{ text: value ? extractorFn(value).value : '' }}
+      accessibilityState={{ disabled, expanded: menuVisible }}
+      testID={testID}
+    >
       {renderMenu === 'dropdown' ? (
         <DropdownMenu
           options={options}
-          selected={selected}
+          selected={value}
           visible={menuVisible}
-          noneLabel={noneLabel}
+          noneLabel={noneOption ? noneOption : undefined}
           extractorFn={extractorFn}
           onSelection={onSelectionConfirmed}
           onDismiss={() => setMenuVisible(false)}
@@ -199,7 +199,7 @@ export const PaperSelect = <T extends NonNullable<any>>(
         <>
           <ModalMenu
             options={options}
-            selected={selected}
+            selected={value}
             visible={menuVisible}
             label={label}
             extractorFn={extractorFn}
@@ -210,7 +210,7 @@ export const PaperSelect = <T extends NonNullable<any>>(
           {Anchor}
         </>
       ) : null}
-    </>
+    </View>
   );
 };
 

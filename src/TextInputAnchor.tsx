@@ -4,12 +4,12 @@ import {
   StyleSheet,
   View,
   Pressable,
-  PressableProps,
-  NativeSyntheticEvent,
-  TargetedEvent,
+  type PressableProps,
+  type NativeSyntheticEvent,
+  type TargetedEvent,
 } from 'react-native';
 
-import { useTheme, TextInput, TextInputProps } from 'react-native-paper';
+import { useTheme, TextInput, type TextInputProps } from 'react-native-paper';
 
 type SupportedPressableProps = Omit<PressableProps, 'children' | 'style'>;
 
@@ -89,11 +89,7 @@ export const TextInputAnchor = (props: TextInputAnchorProps) => {
   }, [error, paperTheme]);
 
   return (
-    <View
-      accessibilityRole="combobox"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled, expanded: active }}
-    >
+    <>
       <Pressable
         onFocus={(e) => onFocus(e)}
         onBlur={(e) => onBlur(e)}
@@ -136,7 +132,7 @@ export const TextInputAnchor = (props: TextInputAnchorProps) => {
           testID={testID ? `${testID}-text-input` : undefined}
         />
       </View>
-    </View>
+    </>
   );
 };
 

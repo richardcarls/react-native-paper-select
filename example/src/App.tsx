@@ -5,6 +5,7 @@ import {
   Provider as PaperProvider,
   MD3LightTheme,
   Text,
+  SegmentedButtons,
 } from 'react-native-paper';
 
 import { PaperSelect } from '@rcarls/react-native-paper-select';
@@ -14,6 +15,7 @@ export const App = () => {
     <PaperProvider theme={MD3LightTheme}>
       <View style={styles.screen}>
         <SimpleExample />
+        <ControlledExample />
         <Example2 />
       </View>
     </PaperProvider>
@@ -35,6 +37,36 @@ const SimpleExample = () => {
         label="Example"
         options={simpleOptions}
         onSelection={(value) => setSelected(value)}
+      />
+
+      <Text>Selected value: {selected}</Text>
+    </View>
+  );
+};
+
+const ControlledExample = () => {
+  const [selected, setSelected] = React.useState<string>(simpleOptions[0]!!);
+
+  return (
+    <View style={styles.example}>
+      <Text variant="headlineMedium">Example (as controlled input)</Text>
+
+      <SegmentedButtons
+        buttons={simpleOptions.map((option) => ({
+          value: option,
+          label: option,
+        }))}
+        value={selected}
+        onValueChange={setSelected}
+        style={{ marginVertical: 16 }}
+      />
+
+      <PaperSelect
+        label="Example"
+        options={simpleOptions}
+        value={selected}
+        noneOption={false}
+        onSelection={(option) => option && setSelected(option)}
       />
 
       <Text>Selected value: {selected}</Text>

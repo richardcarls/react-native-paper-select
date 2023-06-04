@@ -2,10 +2,10 @@ import * as React from 'react';
 
 import {
   StyleSheet,
-  TextStyle,
+  type TextStyle,
   View,
   FlatList,
-  ListRenderItemInfo,
+  type ListRenderItemInfo,
   useWindowDimensions,
 } from 'react-native';
 
