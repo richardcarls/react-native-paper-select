@@ -7,7 +7,7 @@ import {
   Text,
 } from 'react-native-paper';
 
-import { PaperSelect } from 'react-native-paper-select';
+import { PaperSelect } from '@rcarls/react-native-paper-select';
 
 export const App = () => {
   return (
