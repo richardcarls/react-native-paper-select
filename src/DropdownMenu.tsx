@@ -20,7 +20,6 @@ export type DropdownMenuProps<T extends NonNullable<any>> = {
 
   valueFn: (option: T) => string;
   labelFn: (option: T) => string;
-
   onSelection?: (option: T) => void;
   onClear?: () => void;
   onDismiss?: () => void;
