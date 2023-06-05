@@ -8,11 +8,6 @@ import { ModalMenu } from './ModalMenu';
 
 import { optionCompare, defaultValueFn, defaultLabelFn } from './util';
 
-export type PaperSelectOption = {
-  value: string;
-  label: string;
-};
-
 export type MultiSelectProps<T> = {
   multi: true;
 
