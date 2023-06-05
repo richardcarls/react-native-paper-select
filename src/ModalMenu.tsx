@@ -18,31 +18,21 @@ import {
   Modal,
 } from 'react-native-paper';
 
-import type { PaperSelectOption } from './PaperSelect';
 import { ListItem } from './ListItem';
 import { optionCompare } from './util';
 
 export type ModalMenuProps<T extends NonNullable<any>> = {
   options?: ReadonlyArray<T>;
-  selected?: T;
+  selected?: T | T[];
 
   visible?: boolean;
   label?: string;
 
-  /**
-   * Returns a value and label for the given option
-   *
-   * @param option - The option to derive a value and label from
-   *
-   * @defaultValue
-   * When not defined:
-   * - If option is a string, it's value is also used for the label; otherwise
-   * - The values of the `value` and `label` properties, if they exist; otherwise
-   * - The option is coersed to a string via `String()`
-   */
-  extractorFn: (option: T) => PaperSelectOption;
+  valueFn: (option: T) => string;
+  labelFn: (option: T) => string;
 
-  onSelection?: (option?: T) => void;
+  onSelection?: (option: T) => void;
+  onClear?: () => void;
   onDismiss?: () => void;
 
   /** testID to be used on tests. */
@@ -57,8 +47,10 @@ export const ModalMenu = <T extends NonNullable<any>>(
     selected,
     visible = false,
     label,
-    extractorFn,
+    valueFn,
+    labelFn,
     onSelection,
+    onClear,
     onDismiss,
     testID,
   } = props;
@@ -98,8 +90,9 @@ export const ModalMenu = <T extends NonNullable<any>>(
 
   // Renders FlatList items for each option in `modal` mode
   const renderModalItem = ({ item: option }: ListRenderItemInfo<T>) => {
-    const { label: optionLabel } = extractorFn(option);
-    const isSelected = optionCompare(option, selected);
+    const isSelected = Array.isArray(selected)
+      ? selected.some((opt) => optionCompare(option, opt))
+      : optionCompare(option, selected);
 
     const labelStyle: TextStyle = {
       color: isSelected
@@ -114,7 +107,7 @@ export const ModalMenu = <T extends NonNullable<any>>(
         accessibilityState={{ checked: isSelected }}
       >
         <Text variant="bodyMedium" style={labelStyle}>
-          {optionLabel}
+          {labelFn(option)}
         </Text>
       </ListItem>
     );
@@ -139,7 +132,7 @@ export const ModalMenu = <T extends NonNullable<any>>(
         <View style={styles.modalListContainer}>
           <FlatList
             data={options}
-            keyExtractor={(option) => extractorFn(option).value}
+            keyExtractor={valueFn}
             renderItem={renderModalItem}
             ItemSeparatorComponent={Divider}
             accessibilityRole="list"
@@ -149,7 +142,7 @@ export const ModalMenu = <T extends NonNullable<any>>(
         <Divider />
 
         <Button
-          onPress={() => onSelection && onSelection(undefined)}
+          onPress={() => onClear && onClear()}
           style={styles.modalClearButton}
         >
           Clear

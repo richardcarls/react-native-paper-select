@@ -4,12 +4,11 @@ import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
 import { useTheme, Menu, Divider } from 'react-native-paper';
 
-import type { PaperSelectOption } from './PaperSelect';
 import { optionCompare } from './util';
 
 export type DropdownMenuProps<T extends NonNullable<any>> = {
   options?: ReadonlyArray<T>;
-  selected?: T;
+  selected?: T | T[];
   visible?: boolean;
 
   /**
@@ -17,22 +16,13 @@ export type DropdownMenuProps<T extends NonNullable<any>> = {
    *
    * @defaultValue '(None)'
    */
-  noneLabel?: String;
+  noneOption?: String | false;
 
-  /**
-   * Returns a value and label for the given option
-   *
-   * @param option - The option to derive a value and label from
-   *
-   * @defaultValue
-   * When not defined:
-   * - If option is a string, it's value is also used for the label; otherwise
-   * - The values of the `value` and `label` properties, if they exist; otherwise
-   * - The option is coersed to a string via `String()`
-   */
-  extractorFn: (option: T) => PaperSelectOption;
+  valueFn: (option: T) => string;
+  labelFn: (option: T) => string;
 
-  onSelection?: (option?: T) => void;
+  onSelection?: (option: T) => void;
+  onClear?: () => void;
   onDismiss?: () => void;
 
   /** testID to be used on tests. */
@@ -46,9 +36,11 @@ export const DropdownMenu = <T extends NonNullable<any>>(
     options,
     selected,
     visible = false,
-    noneLabel = '(None)',
-    extractorFn,
+    noneOption,
+    valueFn,
+    labelFn,
     onSelection,
+    onClear,
     onDismiss,
     children,
     testID,
@@ -85,12 +77,12 @@ export const DropdownMenu = <T extends NonNullable<any>>(
   const renderMenuOptions = () => {
     const items: JSX.Element[] = [];
 
-    if (noneLabel) {
+    if (noneOption) {
       items.push(
         <React.Fragment key="none">
           <Menu.Item
-            title={noneLabel}
-            onPress={() => onSelection && onSelection(undefined)}
+            title={noneOption}
+            onPress={() => onClear && onClear()}
             titleStyle={styles.noneOptionText}
             testID={testID ? `${testID}-none` : undefined}
           />
@@ -111,20 +103,22 @@ export const DropdownMenu = <T extends NonNullable<any>>(
 
     for (let i = 0; i < options.length; i++) {
       const option = options[i]!!;
-      const { value: optionValue, label: optionLabel } = extractorFn(option);
+      const isSelected = Array.isArray(selected)
+        ? selected.some((opt) => optionCompare(option, opt))
+        : optionCompare(option, selected);
 
       items.push(
-        <React.Fragment key={optionValue}>
+        <React.Fragment key={valueFn(option)}>
           <Menu.Item
-            title={optionLabel}
+            title={labelFn(option)}
             onPress={() => onSelection && onSelection(option)}
             titleStyle={{
-              color: optionCompare(option, selected)
+              color: isSelected
                 ? paperTheme.colors.primary
                 : paperTheme.colors.onSurface,
             }}
             contentStyle={{ maxWidth }}
-            testID={testID ? `${testID}-option-${optionValue}` : undefined}
+            testID={testID ? `${testID}-option-${valueFn(option)}` : undefined}
           />
           {i < options.length - 1 ? <Divider /> : null}
         </React.Fragment>

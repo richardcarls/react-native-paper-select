@@ -16,7 +16,8 @@ export const App = () => {
       <View style={styles.screen}>
         <SimpleExample />
         <ControlledExample />
-        <Example2 />
+        <CollectionExample />
+        <MultiExample />
       </View>
     </PaperProvider>
   );
@@ -25,6 +26,12 @@ export const App = () => {
 export default App;
 
 const simpleOptions = ['one', 'two', 'three'];
+
+const collectionOptions = [
+  { id: 'e637939a-cf3e-45c4-a57c-0b2cf4f03d92', text: 'Option 1' },
+  { id: 'c4d81412-e97e-481e-8f15-7fabc28ff154', text: 'Option 2' },
+  { id: 'd848ec93-a112-4897-a092-01145b17702e', text: 'Option 3' },
+];
 
 const SimpleExample = () => {
   const [selected, setSelected] = React.useState<string | undefined>(undefined);
@@ -74,16 +81,31 @@ const ControlledExample = () => {
   );
 };
 
-const example2Options = [
-  { id: 'e637939a-cf3e-45c4-a57c-0b2cf4f03d92', text: 'Option 1' },
-  { id: 'c4d81412-e97e-481e-8f15-7fabc28ff154', text: 'Option 2' },
-  { id: 'd848ec93-a112-4897-a092-01145b17702e', text: 'Option 3' },
-];
+const MultiExample = () => {
+  const [selected, setSelected] = React.useState<string[] | undefined>(
+    undefined
+  );
 
-const Example2 = () => {
+  return (
+    <View style={styles.example}>
+      <Text variant="headlineMedium">Multi-select Example</Text>
+
+      <PaperSelect
+        multi
+        label="Multi-select Example"
+        options={simpleOptions}
+        onSelection={(values) => setSelected(values)}
+      />
+
+      <Text>Selected value: {selected?.join(', ')}</Text>
+    </View>
+  );
+};
+
+const CollectionExample = () => {
   const [selected, setSelected] = React.useState<
     { id: string; text: string } | undefined
-  >(example2Options[0]);
+  >(collectionOptions[0]);
 
   return (
     <View style={styles.example}>
@@ -91,9 +113,10 @@ const Example2 = () => {
 
       <PaperSelect
         label="Example 2"
-        options={example2Options}
-        defaultValue={example2Options[0]}
-        extractorFn={({ id, text }) => ({ value: id, label: text })}
+        options={collectionOptions}
+        defaultValue={collectionOptions[0]}
+        valueFn={({ id }) => id}
+        labelFn={({ text }) => text}
         onSelection={(option) => setSelected(option)}
       />
 
