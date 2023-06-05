@@ -30,6 +30,8 @@ export type SingleSelectProps<T> = {
   /** Array of options data */
   options?: ReadonlyArray<T>;
 
+  // TODO: options sort
+
   label?: string;
 
   // TODO: nullable

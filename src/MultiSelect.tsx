@@ -30,6 +30,8 @@ export type MultiSelectProps<T> = {
   /** Array of options data */
   options?: ReadonlyArray<T>;
 
+  // TODO: options sort
+
   label?: string;
 
   // TODO: nullable
@@ -96,7 +98,6 @@ export const MultiSelect = <T extends unknown>(props: MultiSelectProps<T>) => {
 
   const [menuVisible, setMenuVisible] = React.useState(false);
 
-  // TODO: keep index order?
   const getTextValue = React.useCallback(() => {
     return value ? value.map((val) => valueFn(val)).join(', ') : '';
   }, [value, valueFn]);
@@ -120,7 +121,11 @@ export const MultiSelect = <T extends unknown>(props: MultiSelectProps<T>) => {
     const valid = options?.some((option) => optionCompare(option, selected));
 
     if (valid) {
-      const newValue = [selected, ...(value ?? [])];
+      const newValue = options?.filter(
+        (option) =>
+          value?.some((val) => optionCompare(val, option)) ||
+          optionCompare(selected, option)
+      );
 
       // Keep track of value in local state when input is not controlled
       if (!isControlled) {
