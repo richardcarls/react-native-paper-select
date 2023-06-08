@@ -20,7 +20,8 @@ export type DropdownMenuProps<T extends NonNullable<any>> = {
 
   valueFn: (option: T) => string;
   labelFn: (option: T) => string;
-  onSelection?: (option: T) => void;
+  onSelect?: (option: T) => void;
+  onDeselect?: (option: T) => void;
   onClear?: () => void;
   onDismiss?: () => void;
 
@@ -38,7 +39,8 @@ export const DropdownMenu = <T extends NonNullable<any>>(
     noneOption,
     valueFn,
     labelFn,
-    onSelection,
+    onSelect,
+    onDeselect,
     onClear,
     onDismiss,
     children,
@@ -110,7 +112,11 @@ export const DropdownMenu = <T extends NonNullable<any>>(
         <React.Fragment key={valueFn(option)}>
           <Menu.Item
             title={labelFn(option)}
-            onPress={() => onSelection && onSelection(option)}
+            onPress={() =>
+              isSelected
+                ? onDeselect && onDeselect(option)
+                : onSelect && onSelect(option)
+            }
             titleStyle={{
               color: isSelected
                 ? paperTheme.colors.primary

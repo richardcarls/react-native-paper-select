@@ -243,6 +243,25 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     }
   };
 
+  const deselectOption = (deselected: T) => {
+    if (multi) {
+      assertMulti(props);
+
+      const newValue = (value as T[] | undefined)?.filter(
+        (val) => !optionCompare(val, deselected)
+      );
+
+      // Keep track of value in local state when input is not controlled
+      if (!isControlled) {
+        setUncontrolledValue(newValue);
+      }
+
+      props.onSelection && props.onSelection(newValue as T[] | undefined);
+    } else {
+      // no-op
+    }
+  };
+
   const openMenu = React.useCallback(() => {
     if (renderMenu && !disabled) {
       // Close keyboard to make best use of screen space
@@ -289,7 +308,8 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
           noneOption={noneOption}
           valueFn={valueFn}
           labelFn={labelFn}
-          onSelection={selectOption}
+          onSelect={selectOption}
+          onDeselect={deselectOption}
           onClear={clearSelection}
           onDismiss={onDismiss}
           testID={testID ? `${testID}-dropdown` : undefined}
@@ -307,7 +327,8 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
             label={label}
             valueFn={valueFn}
             labelFn={labelFn}
-            onSelection={selectOption}
+            onSelect={selectOption}
+            onDeselect={deselectOption}
             onClear={clearSelection}
             onDismiss={onDismiss}
             testID={testID ? `${testID}-modal` : undefined}

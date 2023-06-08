@@ -30,7 +30,8 @@ export type ModalMenuProps<T extends NonNullable<any>> = {
 
   valueFn: (option: T) => string;
   labelFn: (option: T) => string;
-  onSelection?: (option: T) => void;
+  onSelect?: (option: T) => void;
+  onDeselect?: (option: T) => void;
   onClear?: () => void;
   onDismiss?: () => void;
 
@@ -48,7 +49,8 @@ export const ModalMenu = <T extends NonNullable<any>>(
     label,
     valueFn,
     labelFn,
-    onSelection,
+    onSelect,
+    onDeselect,
     onClear,
     onDismiss,
     testID,
@@ -81,7 +83,8 @@ export const ModalMenu = <T extends NonNullable<any>>(
         minHeight: dimensions.height / 4,
         maxHeight: dimensions.height / 2,
       },
-      modalClearButton: {
+      modalFooter: {
+        flexDirection: 'row-reverse',
         marginTop: 16,
       },
     });
@@ -101,7 +104,11 @@ export const ModalMenu = <T extends NonNullable<any>>(
 
     return (
       <ListItem
-        onPress={() => onSelection && onSelection(option)}
+        onPress={() =>
+          isSelected
+            ? onDeselect && onDeselect(option)
+            : onSelect && onSelect(option)
+        }
         accessibilityRole="checkbox"
         accessibilityState={{ checked: isSelected }}
       >
@@ -140,12 +147,15 @@ export const ModalMenu = <T extends NonNullable<any>>(
 
         <Divider />
 
-        <Button
-          onPress={() => onClear && onClear()}
-          style={styles.modalClearButton}
-        >
-          Clear
-        </Button>
+        <View style={styles.modalFooter}>
+          <Button onPress={() => onDismiss && onDismiss()}>Ok</Button>
+          <Button
+            onPress={() => onClear && onClear()}
+            textColor={paperTheme.colors.onSurfaceVariant}
+          >
+            Clear
+          </Button>
+        </View>
       </Modal>
     </Portal>
   );
