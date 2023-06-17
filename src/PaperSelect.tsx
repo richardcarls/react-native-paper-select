@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { View, Keyboard, Platform } from 'react-native';
+import { View, Keyboard, Platform, type ViewProps } from 'react-native';
 
 import { TextInputAnchor } from './TextInputAnchor';
 import { DropdownMenu } from './DropdownMenu';
@@ -8,13 +8,19 @@ import { ModalMenu } from './ModalMenu';
 
 import { optionCompare, defaultValueFn, defaultLabelFn } from './util';
 
-type PaperSelectCommonProps<T> = {
+type PaperSelectCommonProps<T extends Readonly<T>> = {
+  // renderInput?: 'text' | 'button' | 'chips' | (() => React.ReactElement);
+  readonly renderInput?: 'text';
+
+  // renderMenu?: 'modal' | 'dropdown' | false | (() => React.ReactElement);
+  readonly renderMenu?: 'modal' | 'dropdown' | false;
+
   /** Array of options data */
-  options?: ReadonlyArray<T>;
+  options?: T[];
 
   // TODO: options sort
 
-  label?: string;
+  readonly label?: string;
 
   // TODO: nullable
 
@@ -23,67 +29,52 @@ type PaperSelectCommonProps<T> = {
 
   // TODO: editable
 
-  disabled?: boolean;
+  readonly disabled?: boolean;
 
   /**
    * Label to use for the optional "none" option (sets value to `undefined`)
    *
    * @defaultValue '(None)'
    */
-  noneOption?: String | false;
+  readonly noneOption?: String | false;
 
-  valueFn?: (option: T) => string;
+  readonly valueFn?: (option: T) => string;
 
-  labelFn?: (option: T) => string;
+  readonly labelFn?: (option: T) => string;
 
   // TODO: onSelectionCommit
+} & Omit<ViewProps, 'children'>;
 
-  /** testID to be used on tests. */
-  testID?: string;
-};
-
-type PaperSingleSelectProps<T> = {
-  multi?: false;
-
-  // renderInput?: 'text' | 'button' | 'chips' | (() => React.ReactElement);
-  renderInput?: 'text';
-
-  // renderMenu?: 'modal' | 'dropdown' | false | (() => React.ReactElement);
-  renderMenu?: 'modal' | 'dropdown' | false;
+type PaperSingleSelectProps<T extends Readonly<T>> = {
+  readonly multi?: false;
 
   /** The value to display in the component */
   value?: T;
 
-  defaultValue?: T;
+  readonly defaultValue?: T;
 
   /**
    * Callback that is called when the component's selection changes.
    *
    * The selected option is passed as an argument.
    */
-  onSelection?: (selected: T | undefined) => void;
+  readonly onSelection?: (selected: T | undefined) => void;
 } & PaperSelectCommonProps<T>;
 
-type PaperMultiSelectProps<T> = {
-  multi: true;
-
-  // renderInput?: 'text' | 'button' | 'chips' | (() => React.ReactElement);
-  renderInput?: 'text';
-
-  // renderMenu?: 'modal' | 'dropdown' | false | (() => React.ReactElement);
-  renderMenu?: 'modal' | 'dropdown' | false;
+type PaperMultiSelectProps<T extends Readonly<T>> = {
+  readonly multi: true;
 
   /** The value to display in the component */
   value?: T[];
 
-  defaultValue?: T[];
+  readonly defaultValue?: T[];
 
   /**
    * Callback that is called when the component's selection changes.
    *
    * The selected option is passed as an argument.
    */
-  onSelection?: (selected: T[] | undefined) => void;
+  readonly onSelection?: (selected: T[] | undefined) => void;
 } & PaperSelectCommonProps<T>;
 
 export type PaperSelectProps<T> =
@@ -166,6 +157,8 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     valueFn = defaultValueFn,
     labelFn = defaultLabelFn,
     testID,
+
+    ...viewProps
   } = props;
 
   const [uncontrolledValue, setUncontrolledValue] = React.useState<
@@ -299,6 +292,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
       accessibilityValue={{ text: getTextValue() }}
       accessibilityState={{ disabled, expanded: menuVisible }}
       testID={testID}
+      {...viewProps}
     >
       {renderMenu === 'dropdown' ? (
         <DropdownMenu

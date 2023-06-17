@@ -44,6 +44,7 @@ const SimpleExample = () => {
         label="Example"
         options={simpleOptions}
         onSelection={(value) => setSelected(value)}
+        style={styles.formGroup}
       />
 
       <Text>Selected value: {selected}</Text>
@@ -65,7 +66,7 @@ const ControlledExample = () => {
         }))}
         value={selected}
         onValueChange={setSelected}
-        style={{ marginVertical: 16 }}
+        style={styles.formGroup}
       />
 
       <PaperSelect
@@ -74,6 +75,7 @@ const ControlledExample = () => {
         value={selected}
         noneOption={false}
         onSelection={(option) => option && setSelected(option)}
+        style={styles.formGroup}
       />
 
       <Text>Selected value: {selected}</Text>
@@ -95,6 +97,7 @@ const MultiExample = () => {
         label="Multi-select Example"
         options={simpleOptions}
         onSelection={(values) => setSelected(values)}
+        style={styles.formGroup}
       />
 
       <Text>Selected value: {selected?.join(', ')}</Text>
@@ -118,6 +121,7 @@ const CollectionExample = () => {
         valueFn={({ id }) => id}
         labelFn={({ text }) => text}
         onSelection={(option) => setSelected(option)}
+        style={styles.formGroup}
       />
 
       <Text>Selected value: {selected?.text}</Text>
@@ -137,5 +141,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     alignItems: 'stretch',
     marginBottom: 16,
+  },
+  formGroup: {
+    marginVertical: 16,
   },
 });
