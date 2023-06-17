@@ -16,8 +16,8 @@ export const App = () => {
       <View style={styles.screen}>
         <SimpleExample />
         <ControlledExample />
-        <CollectionExample />
         <MultiExample />
+        <CollectionExample />
       </View>
     </PaperProvider>
   );
@@ -94,7 +94,7 @@ const MultiExample = () => {
 
       <PaperSelect
         multi
-        label="Multi-select Example"
+        label="Example"
         options={simpleOptions}
         onSelection={(values) => setSelected(values)}
         style={styles.formGroup}
@@ -112,10 +112,10 @@ const CollectionExample = () => {
 
   return (
     <View style={styles.example}>
-      <Text variant="headlineMedium">Example 2</Text>
+      <Text variant="headlineMedium">Collection Example</Text>
 
       <PaperSelect
-        label="Example 2"
+        label="Example"
         options={collectionOptions}
         defaultValue={collectionOptions[0]}
         valueFn={({ id }) => id}

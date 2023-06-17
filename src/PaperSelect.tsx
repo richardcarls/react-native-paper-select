@@ -179,6 +179,14 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     }
   }, [multi, value, valueFn]);
 
+  const getTextLabel = React.useCallback(() => {
+    if (multi) {
+      return value ? (value as T[]).map((val) => labelFn(val)).join(', ') : '';
+    } else {
+      return value ? labelFn(value as T) : '';
+    }
+  }, [multi, value, labelFn]);
+
   const clearSelection = () => {
     // Keep track of value in local state when input is not controlled
     if (!isControlled) {
@@ -274,7 +282,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
         <TextInputAnchor
           active={menuVisible}
           label={label}
-          value={getTextValue()}
+          value={getTextLabel()}
           onPress={() => openMenu()}
           disabled={disabled}
           error={error}
