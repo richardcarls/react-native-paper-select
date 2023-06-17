@@ -1,5 +1,6 @@
 export {
   PaperSelect,
   type PaperSelectProps,
-  type PaperSelectOption,
+  type PaperSelectSingleState,
+  type PaperSelectMultiState,
 } from './PaperSelect';

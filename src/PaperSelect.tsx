@@ -8,15 +8,26 @@ import { ModalMenu } from './ModalMenu';
 
 import { optionCompare, defaultValueFn, defaultLabelFn } from './util';
 
-type PaperSelectCommonProps<T extends Readonly<T>> = {
-  // renderInput?: 'text' | 'button' | 'chips' | (() => React.ReactElement);
-  readonly renderInput?: 'text';
+type PaperSelectCommonState<T> = {
+  readonly active: boolean;
+  readonly openMenu: () => void;
+  readonly closeMenu: () => void;
+  readonly clearSelected: () => void;
+  readonly select: (selected: Readonly<T>) => void;
+  readonly deselect: (deselected: Readonly<T>) => void;
+};
 
-  // renderMenu?: 'modal' | 'dropdown' | false | (() => React.ReactElement);
-  readonly renderMenu?: 'modal' | 'dropdown' | false;
+export type PaperSelectSingleState<T> = {
+  readonly selected?: Readonly<T>;
+} & PaperSelectCommonState<T>;
 
+export type PaperSelectMultiState<T> = {
+  readonly selected?: Readonly<T>[];
+} & PaperSelectCommonState<T>;
+
+type PaperSelectCommonProps<T> = {
   /** Array of options data */
-  options?: T[];
+  readonly options?: T[];
 
   // TODO: options sort
 
@@ -31,6 +42,8 @@ type PaperSelectCommonProps<T extends Readonly<T>> = {
 
   readonly disabled?: boolean;
 
+  readonly renderMenu?: 'modal' | 'dropdown' | false;
+
   /**
    * Label to use for the optional "none" option (sets value to `undefined`)
    *
@@ -38,14 +51,14 @@ type PaperSelectCommonProps<T extends Readonly<T>> = {
    */
   readonly noneOption?: String | false;
 
-  readonly valueFn?: (option: T) => string;
+  readonly valueFn?: (option: Readonly<T>) => string;
 
-  readonly labelFn?: (option: T) => string;
+  readonly labelFn?: (option: Readonly<T>) => string;
 
   // TODO: onSelectionCommit
 } & Omit<ViewProps, 'children'>;
 
-type PaperSingleSelectProps<T extends Readonly<T>> = {
+type PaperSingleSelectProps<T> = {
   readonly multi?: false;
 
   /** The value to display in the component */
@@ -58,10 +71,12 @@ type PaperSingleSelectProps<T extends Readonly<T>> = {
    *
    * The selected option is passed as an argument.
    */
-  readonly onSelection?: (selected: T | undefined) => void;
+  readonly onSelection?: (selected: Readonly<T> | undefined) => void;
+
+  readonly renderFn?: (state: PaperSelectSingleState<T>) => React.ReactElement;
 } & PaperSelectCommonProps<T>;
 
-type PaperMultiSelectProps<T extends Readonly<T>> = {
+type PaperMultiSelectProps<T> = {
   readonly multi: true;
 
   /** The value to display in the component */
@@ -74,15 +89,17 @@ type PaperMultiSelectProps<T extends Readonly<T>> = {
    *
    * The selected option is passed as an argument.
    */
-  readonly onSelection?: (selected: T[] | undefined) => void;
+  readonly onSelection?: (selected: Readonly<T>[] | undefined) => void;
+
+  readonly renderFn?: (state: PaperSelectMultiState<T>) => React.ReactElement;
 } & PaperSelectCommonProps<T>;
 
 export type PaperSelectProps<T> =
-  | PaperSingleSelectProps<T>
-  | PaperMultiSelectProps<T>;
+  | PaperMultiSelectProps<T>
+  | PaperSingleSelectProps<T>;
 
 function assertSingle<T>(
-  props: PaperSelectProps<T>
+  props: any
 ): asserts props is PaperSingleSelectProps<T> {
   const valid =
     (!Object.hasOwn(props, 'multi') || props.multi === false) &&
@@ -144,16 +161,16 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     value: otherValue,
     defaultValue,
 
-    renderInput = 'text',
-    // TODO: If undefined, select based on OS env (and if renderInput is not 'chips')
-    renderMenu = Platform.OS === 'web' && 'document' in global
-      ? 'dropdown'
-      : 'modal',
     options,
     label,
     error = false,
     disabled = false,
     noneOption = '(None)',
+    renderMenu = Platform.OS === 'web' &&
+    'document' in global &&
+    props.renderFn === undefined
+      ? 'dropdown'
+      : 'modal',
     valueFn = defaultValueFn,
     labelFn = defaultLabelFn,
     testID,
@@ -161,9 +178,9 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     ...viewProps
   } = props;
 
-  const [uncontrolledValue, setUncontrolledValue] = React.useState<
-    T | T[] | undefined
-  >(otherValue ?? defaultValue);
+  const [uncontrolledValue, setUncontrolledValue] = React.useState(
+    otherValue ?? defaultValue
+  );
 
   // Use value from props instead of local state when input is controlled
   const isControlled = otherValue !== undefined;
@@ -171,7 +188,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
 
   const [menuVisible, setMenuVisible] = React.useState(false);
 
-  const getTextValue = React.useCallback(() => {
+  const getValue = React.useCallback(() => {
     if (multi) {
       return value ? (value as T[]).map((val) => valueFn(val)).join(', ') : '';
     } else {
@@ -179,7 +196,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     }
   }, [multi, value, valueFn]);
 
-  const getTextLabel = React.useCallback(() => {
+  const getLabel = React.useCallback(() => {
     if (multi) {
       return value ? (value as T[]).map((val) => labelFn(val)).join(', ') : '';
     } else {
@@ -187,7 +204,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     }
   }, [multi, value, labelFn]);
 
-  const clearSelection = () => {
+  const clearSelected = () => {
     // Keep track of value in local state when input is not controlled
     if (!isControlled) {
       setUncontrolledValue(undefined);
@@ -203,7 +220,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     setMenuVisible(false);
   };
 
-  const selectOption = (selected: T) => {
+  const select = (selected: T) => {
     // Already selected
     if (optionCompare(value, selected)) {
       return;
@@ -244,7 +261,7 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     }
   };
 
-  const deselectOption = (deselected: T) => {
+  const deselect = (deselected: T) => {
     if (multi) {
       assertMulti(props);
 
@@ -272,32 +289,58 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
     }
   }, [renderMenu, disabled]);
 
-  const onDismiss = React.useCallback(() => {
+  const closeMenu = React.useCallback(() => {
     setMenuVisible(false);
   }, []);
 
-  const Anchor = (
-    <>
-      {renderInput === 'text' ? (
+  const renderAnchor = () => {
+    if (props.renderFn === undefined) {
+      return (
         <TextInputAnchor
           active={menuVisible}
           label={label}
-          value={getTextLabel()}
+          value={getLabel()}
           onPress={() => openMenu()}
           disabled={disabled}
           error={error}
           testID={testID ? `${testID}-anchor` : undefined}
         />
-      ) : null}
-    </>
-  );
+      );
+    } else {
+      if (multi) {
+        assertMulti(props);
+
+        return props.renderFn({
+          active: menuVisible,
+          selected: value as T[],
+          openMenu,
+          closeMenu,
+          clearSelected,
+          select,
+          deselect,
+        });
+      } else {
+        assertSingle(props);
+
+        return props.renderFn({
+          active: menuVisible,
+          selected: value as T,
+          openMenu,
+          closeMenu,
+          clearSelected,
+          select,
+          deselect,
+        });
+      }
+    }
+  };
 
   return (
     <View
       accessible={true}
       accessibilityRole="combobox"
       accessibilityLabel={label}
-      accessibilityValue={{ text: getTextValue() }}
+      accessibilityValue={{ text: getValue() }}
       accessibilityState={{ disabled, expanded: menuVisible }}
       testID={testID}
       {...viewProps}
@@ -310,13 +353,13 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
           noneOption={noneOption}
           valueFn={valueFn}
           labelFn={labelFn}
-          onSelect={selectOption}
-          onDeselect={deselectOption}
-          onClear={clearSelection}
-          onDismiss={onDismiss}
+          onSelect={select}
+          onDeselect={deselect}
+          onClear={clearSelected}
+          onDismiss={closeMenu}
           testID={testID ? `${testID}-dropdown` : undefined}
         >
-          {Anchor}
+          {renderAnchor()}
         </DropdownMenu>
       ) : null}
 
@@ -329,13 +372,13 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
             label={label}
             valueFn={valueFn}
             labelFn={labelFn}
-            onSelect={selectOption}
-            onDeselect={deselectOption}
-            onClear={clearSelection}
-            onDismiss={onDismiss}
+            onSelect={select}
+            onDeselect={deselect}
+            onClear={clearSelected}
+            onDismiss={closeMenu}
             testID={testID ? `${testID}-modal` : undefined}
           />
-          {Anchor}
+          {renderAnchor()}
         </>
       ) : null}
     </View>

@@ -4,11 +4,17 @@ import { StyleSheet, View } from 'react-native';
 import {
   Provider as PaperProvider,
   MD3LightTheme,
+  useTheme,
   Text,
   SegmentedButtons,
+  Chip,
+  Button,
 } from 'react-native-paper';
 
-import { PaperSelect } from '@rcarls/react-native-paper-select';
+import {
+  PaperSelect,
+  type PaperSelectMultiState,
+} from '@rcarls/react-native-paper-select';
 
 export const App = () => {
   return (
@@ -18,6 +24,7 @@ export const App = () => {
         <ControlledExample />
         <MultiExample />
         <CollectionExample />
+        <CustomRenderExample />
       </View>
     </PaperProvider>
   );
@@ -26,6 +33,39 @@ export const App = () => {
 export default App;
 
 const simpleOptions = ['one', 'two', 'three'];
+
+const alotOfOptions = [
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Eleven',
+  'Twelve',
+  'Thirteen',
+  'Fourteen',
+  'Fifteen',
+  'Sixteen',
+  'Seventeen',
+  'Eighteen',
+  'Nineteen',
+  'Twenty',
+  'Twenty-one',
+  'Twenty-two',
+  'Twenty-three',
+  'Twenty-four',
+  'Twenty-five',
+  'Twenty-six',
+  'Twenty-seven',
+  'Twenty-eight',
+  'Twenty-nine',
+  'Thirty',
+];
 
 const collectionOptions = [
   { id: 'e637939a-cf3e-45c4-a57c-0b2cf4f03d92', text: 'Option 1' },
@@ -84,9 +124,7 @@ const ControlledExample = () => {
 };
 
 const MultiExample = () => {
-  const [selected, setSelected] = React.useState<string[] | undefined>(
-    undefined
-  );
+  const [selected, setSelected] = React.useState<string[] | undefined>();
 
   return (
     <View style={styles.example}>
@@ -96,6 +134,7 @@ const MultiExample = () => {
         multi
         label="Example"
         options={simpleOptions}
+        defaultValue={selected}
         onSelection={(values) => setSelected(values)}
         style={styles.formGroup}
       />
@@ -129,6 +168,101 @@ const CollectionExample = () => {
   );
 };
 
+const CustomRenderExample = () => {
+  const [selected, setSelected] = React.useState<string[] | undefined>(
+    alotOfOptions.slice(0, 8)
+  );
+
+  const paperTheme = useTheme();
+
+  const customStyles = StyleSheet.create({
+    inputContainer: {
+      paddingVertical: 4,
+      paddingHorizontal: 12,
+      minHeight: 56,
+      backgroundColor: paperTheme.colors.surfaceVariant,
+      borderTopStartRadius: paperTheme.roundness,
+      borderTopEndRadius: paperTheme.roundness,
+      borderBottomColor: paperTheme.colors.outline,
+      borderBottomWidth: 1,
+    },
+    label: {
+      paddingTop: 2,
+      fontSize: 12,
+      fontWeight: '400',
+      letterSpacing: 0.15,
+      transform: [{ scale: 0.98 }],
+      color: paperTheme.colors.onSurfaceVariant,
+    },
+    chipContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    chip: {
+      marginVertical: 4,
+      marginHorizontal: 4,
+      backgroundColor: 'transparent',
+    },
+    buttonContainer: {
+      marginVertical: 8,
+      flexDirection: 'row-reverse',
+    },
+  });
+
+  const renderChips = (state: PaperSelectMultiState<string>) => {
+    const { openMenu, clearSelected, deselect } = state;
+
+    return (
+      <>
+        <View style={customStyles.inputContainer}>
+          <Text variant="bodyLarge" style={customStyles.label}>
+            Example
+          </Text>
+
+          <View style={customStyles.chipContainer}>
+            {selected?.map((option) => (
+              <Chip
+                key={option}
+                mode="outlined"
+                onClose={() => deselect(option)}
+                style={customStyles.chip}
+              >
+                {option}
+              </Chip>
+            ))}
+          </View>
+        </View>
+
+        <View style={customStyles.buttonContainer}>
+          <Button mode="contained-tonal" onPress={openMenu}>
+            Add
+          </Button>
+
+          <Button onPress={clearSelected}>Clear</Button>
+        </View>
+      </>
+    );
+  };
+
+  return (
+    <View style={styles.example}>
+      <Text variant="headlineMedium">Custom Render Example</Text>
+
+      <PaperSelect
+        multi
+        label="Example"
+        options={alotOfOptions}
+        defaultValue={selected}
+        onSelection={(values) => setSelected(values)}
+        renderFn={renderChips}
+        style={styles.formGroup}
+      />
+
+      <Text>Selected value: {selected?.join(', ')}</Text>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -140,6 +274,7 @@ const styles = StyleSheet.create({
   example: {
     flexShrink: 1,
     alignItems: 'stretch',
+    marginHorizontal: 16,
     marginBottom: 16,
   },
   formGroup: {
