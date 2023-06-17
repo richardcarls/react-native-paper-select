@@ -30,9 +30,9 @@ export type ModalMenuProps<T extends NonNullable<any>> = {
 
   valueFn: (option: T) => string;
   labelFn: (option: T) => string;
-  onSelect?: (option: T) => void;
-  onDeselect?: (option: T) => void;
-  onClear?: () => void;
+  select?: (option: T) => void;
+  deselect?: (option: T) => void;
+  clearSelected?: () => void;
   onDismiss?: () => void;
 
   /** testID to be used on tests. */
@@ -49,9 +49,9 @@ export const ModalMenu = <T extends NonNullable<any>>(
     label,
     valueFn,
     labelFn,
-    onSelect,
-    onDeselect,
-    onClear,
+    select,
+    deselect,
+    clearSelected,
     onDismiss,
     testID,
   } = props;
@@ -105,9 +105,7 @@ export const ModalMenu = <T extends NonNullable<any>>(
     return (
       <ListItem
         onPress={() =>
-          isSelected
-            ? onDeselect && onDeselect(option)
-            : onSelect && onSelect(option)
+          isSelected ? deselect && deselect(option) : select && select(option)
         }
         accessibilityRole="checkbox"
         accessibilityState={{ checked: isSelected }}
@@ -150,7 +148,7 @@ export const ModalMenu = <T extends NonNullable<any>>(
         <View style={styles.modalFooter}>
           <Button onPress={() => onDismiss && onDismiss()}>Ok</Button>
           <Button
-            onPress={() => onClear && onClear()}
+            onPress={() => clearSelected && clearSelected()}
             textColor={paperTheme.colors.onSurfaceVariant}
           >
             Clear

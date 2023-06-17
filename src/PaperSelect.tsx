@@ -8,40 +8,82 @@ import { ModalMenu } from './ModalMenu';
 
 import { optionCompare, defaultValueFn, defaultLabelFn } from './util';
 
+/** State object for `renderFn` callback */
 type PaperSelectCommonState<T> = {
+  /** Indicates wether the menu is open or not */
   readonly active: boolean;
+
+  /** Opens the menu */
   readonly openMenu: () => void;
+
+  /** Closes the menu */
   readonly closeMenu: () => void;
+
+  /** Clears the current selection (sets to `undefined`) */
   readonly clearSelected: () => void;
-  readonly select: (selected: Readonly<T>) => void;
-  readonly deselect: (deselected: Readonly<T>) => void;
+
+  /**
+   * Selects an option
+   *
+   * @param selected the option to select
+   */
+  readonly select: (selected: T) => void;
+
+  /**
+   * Deselects an option
+   *
+   * @param deselected the option to deselect
+   */
+  readonly deselect: (deselected: T) => void;
 };
 
+/** State object for `renderFn` callback on a single-select */
 export type PaperSelectSingleState<T> = {
-  readonly selected?: Readonly<T>;
+  /** The current selection. */
+  readonly selected?: T;
 } & PaperSelectCommonState<T>;
 
+/** State object for `renderFn` callback on a multi-select */
 export type PaperSelectMultiState<T> = {
-  readonly selected?: Readonly<T>[];
+  /** The current selection. */
+  readonly selected?: T[];
 } & PaperSelectCommonState<T>;
 
+/** Shared props for single/multi select */
 type PaperSelectCommonProps<T> = {
-  /** Array of options data */
+  /** Array of options */
   readonly options?: T[];
 
   // TODO: options sort
 
+  /** The label for this input. Not used if `renderFn` is supplied. */
   readonly label?: string;
 
   // TODO: nullable
 
-  /** Use error styles on the component */
+  /**
+   * Use error styles on the component
+   *
+   * Not used if `renderFn` is supplied.
+   *
+   * @defaultValue false
+   */
   error?: boolean;
 
   // TODO: editable
 
+  /**
+   * Disables interactivity and uses disabled styles. Not used if `renderFn` is supplied.
+   *
+   * @defaultValue false
+   */
   readonly disabled?: boolean;
 
+  /**
+   * Specifies how the select menu is rendered
+   *
+   * @defaultValue 'dropdown' for web, 'modal' for other environements, or if `renderFn` is defined
+   */
   readonly renderMenu?: 'modal' | 'dropdown' | false;
 
   /**
@@ -51,53 +93,107 @@ type PaperSelectCommonProps<T> = {
    */
   readonly noneOption?: String | false;
 
+  /**
+   * Callback to extract a value from an option
+   *
+   * If not specified, a default implementation is used:
+   * - If option is a string, it's value is returned; otherwise
+   * - If option is an object with either `value`, `key` or `id` keys, it's value is returned; otherwise
+   * - Option is coerced into a string and returned
+   *
+   * @param option the option to derive an option value from
+   * @returns value for the option
+   */
   readonly valueFn?: (option: Readonly<T>) => string;
 
+  /**
+   * Callback to extract a label from an option
+   *
+   * If not specified, a default implementation is used:
+   * - If option is a string, it's value is returned; otherwise
+   * - If option is an object with a `label` key, it's value is returned; otherwise
+   * - Option is coerced into a string and returned
+   *
+   * @param option the option to derive an option label from
+   * @returns label for the option
+   */
   readonly labelFn?: (option: Readonly<T>) => string;
 
   // TODO: onSelectionCommit
 } & Omit<ViewProps, 'children'>;
 
+/** Props for single-select */
 type PaperSingleSelectProps<T> = {
+  /**
+   * Specifies if this select permits multiple selection
+   *
+   * @defaultValue false
+   */
   readonly multi?: false;
 
   /** The value to display in the component */
   value?: T;
 
+  /**
+   * Default selection value to display
+   */
   readonly defaultValue?: T;
 
   /**
    * Callback that is called when the component's selection changes.
    *
-   * The selected option is passed as an argument.
+   * @param option the selected option
    */
-  readonly onSelection?: (selected: Readonly<T> | undefined) => void;
+  readonly onSelection?: (option: Readonly<T> | undefined) => void;
 
+  /**
+   * Render a custom component instead of the default `TextInput` implementation
+   *
+   * @param state current state and callback funtions to use in a custom implementation
+   * @returns the rendered anchor element
+   */
   readonly renderFn?: (state: PaperSelectSingleState<T>) => React.ReactElement;
 } & PaperSelectCommonProps<T>;
 
+/** Props for multi-select */
 type PaperMultiSelectProps<T> = {
+  /**
+   * Specifies if this select permits multiple selection
+   *
+   * @defaultValue false
+   */
   readonly multi: true;
 
   /** The value to display in the component */
   value?: T[];
 
+  /**
+   * Default selection value to display
+   */
   readonly defaultValue?: T[];
 
   /**
    * Callback that is called when the component's selection changes.
    *
-   * The selected option is passed as an argument.
+   * @param options the selected options
    */
-  readonly onSelection?: (selected: Readonly<T>[] | undefined) => void;
+  readonly onSelection?: (options: Readonly<T>[] | undefined) => void;
 
+  /**
+   * Render a custom component instead of the default `TextInput` implementation
+   *
+   * @param state current state and callback funtions to use in a custom implementation
+   * @returns the rendered anchor element
+   */
   readonly renderFn?: (state: PaperSelectMultiState<T>) => React.ReactElement;
 } & PaperSelectCommonProps<T>;
 
+/** Props for PaperSelect component */
 export type PaperSelectProps<T> =
   | PaperMultiSelectProps<T>
   | PaperSingleSelectProps<T>;
 
+/** Assertion function for narrowing single-select prop types */
 function assertSingle<T>(
   props: any
 ): asserts props is PaperSingleSelectProps<T> {
@@ -113,6 +209,7 @@ function assertSingle<T>(
   }
 }
 
+/** Assertion function for narrowing multi-select prop types */
 function assertMulti<T>(
   props: PaperSelectProps<T>
 ): asserts props is PaperMultiSelectProps<T> {
@@ -155,7 +252,9 @@ function assertMulti<T>(
  * export default MyComponent;
  * ```
  */
-export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
+export const PaperSelect = <T extends NonNullable<any>>(
+  props: PaperSelectProps<T>
+) => {
   const {
     multi = false,
     value: otherValue,
@@ -353,9 +452,9 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
           noneOption={noneOption}
           valueFn={valueFn}
           labelFn={labelFn}
-          onSelect={select}
-          onDeselect={deselect}
-          onClear={clearSelected}
+          select={select}
+          deselect={deselect}
+          clearSelected={clearSelected}
           onDismiss={closeMenu}
           testID={testID ? `${testID}-dropdown` : undefined}
         >
@@ -372,9 +471,9 @@ export const PaperSelect = <T extends unknown>(props: PaperSelectProps<T>) => {
             label={label}
             valueFn={valueFn}
             labelFn={labelFn}
-            onSelect={select}
-            onDeselect={deselect}
-            onClear={clearSelected}
+            select={select}
+            deselect={deselect}
+            clearSelected={clearSelected}
             onDismiss={closeMenu}
             testID={testID ? `${testID}-modal` : undefined}
           />
