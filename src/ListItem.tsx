@@ -1,12 +1,8 @@
 import React from 'react';
 
-import {
-  StyleSheet,
-  View,
-  type ViewStyle,
-  Pressable,
-  type PressableProps,
-} from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
+
+import { TouchableRipple, type TouchableRippleProps } from 'react-native-paper';
 
 export type ListItemVariants = 'one-line' | 'two-line' | 'three-line';
 
@@ -15,7 +11,7 @@ export type ListItemProps = {
 
   leadingContent?: JSX.Element | null;
   trailingContent?: JSX.Element | null;
-} & Omit<PressableProps, 'style'>;
+} & Omit<TouchableRippleProps, 'style'>;
 
 type ListItemStyles = {
   [key in ListItemVariants]: ViewStyle;
@@ -28,7 +24,7 @@ export const ListItem = ({ variant = 'one-line', ...props }: ListItemProps) => {
     trailingContent = null,
     leadingContent = null,
 
-    ...pressableProps
+    ...touchableProps
   } = props;
 
   const commonStyle: ViewStyle = {
@@ -93,9 +89,9 @@ export const ListItem = ({ variant = 'one-line', ...props }: ListItemProps) => {
 
   if (onPress !== undefined) {
     return (
-      <Pressable onPress={onPress} {...pressableProps}>
+      <TouchableRipple onPress={onPress} {...touchableProps}>
         {item}
-      </Pressable>
+      </TouchableRipple>
     );
   } else {
     return item;
