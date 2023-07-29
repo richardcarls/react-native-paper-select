@@ -3,7 +3,6 @@ import * as React from 'react';
 import { View, Keyboard, Platform, type ViewProps } from 'react-native';
 
 import { TextInputAnchor } from './TextInputAnchor';
-import { DropdownMenu } from './DropdownMenu';
 import { ModalMenu } from './ModalMenu';
 
 import { optionCompare, defaultValueFn, defaultLabelFn } from './util';
@@ -91,7 +90,7 @@ type PaperSelectCommonProps<T> = {
    *
    * @defaultValue '(None)'
    */
-  readonly noneOption?: String | false;
+  readonly noneOption?: string | false;
 
   /**
    * Callback to extract a value from an option
@@ -162,7 +161,7 @@ type PaperMultiSelectProps<T> = {
    *
    * @defaultValue false
    */
-  readonly multi: true;
+  readonly multi: true | 'checkboxes';
 
   /** The value to display in the component */
   value?: T[];
@@ -215,7 +214,7 @@ function assertMulti<T>(
 ): asserts props is PaperMultiSelectProps<T> {
   const valid =
     Object.hasOwn(props, 'multi') &&
-    props.multi === true &&
+    (props.multi === true || props.multi === 'checkboxes') &&
     (props.value === undefined || Array.isArray(props.value)) &&
     (props.defaultValue === undefined || Array.isArray(props.defaultValue));
 
@@ -444,42 +443,28 @@ export const PaperSelect = <T extends NonNullable<any>>(
       testID={testID}
       {...viewProps}
     >
-      {renderMenu === 'dropdown' ? (
-        <DropdownMenu
+      {renderMenu === false ? (
+        renderAnchor()
+      ) : (
+        <ModalMenu
           options={options}
           selected={value}
           visible={menuVisible}
-          noneOption={noneOption}
+          label={label}
           valueFn={valueFn}
           labelFn={labelFn}
+          checkboxes={multi === 'checkboxes'}
+          noneOption={noneOption}
+          mode={renderMenu}
           select={select}
           deselect={deselect}
           clearSelected={clearSelected}
           onDismiss={closeMenu}
-          testID={testID ? `${testID}-dropdown` : undefined}
+          testID={testID ? `${testID}-modal` : undefined}
         >
           {renderAnchor()}
-        </DropdownMenu>
-      ) : null}
-
-      {renderMenu === 'modal' ? (
-        <>
-          <ModalMenu
-            options={options}
-            selected={value}
-            visible={menuVisible}
-            label={label}
-            valueFn={valueFn}
-            labelFn={labelFn}
-            select={select}
-            deselect={deselect}
-            clearSelected={clearSelected}
-            onDismiss={closeMenu}
-            testID={testID ? `${testID}-modal` : undefined}
-          />
-          {renderAnchor()}
-        </>
-      ) : null}
+        </ModalMenu>
+      )}
     </View>
   );
 };
