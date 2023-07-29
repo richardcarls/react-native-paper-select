@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import {
   Provider as PaperProvider,
   MD3LightTheme,
@@ -9,6 +9,7 @@ import {
   SegmentedButtons,
   Chip,
   Button,
+  Switch,
 } from 'react-native-paper';
 
 import {
@@ -19,13 +20,16 @@ import {
 export const App = () => {
   return (
     <PaperProvider theme={MD3LightTheme}>
-      <View style={styles.screen}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.screencontent}
+      >
         <SimpleExample />
         <ControlledExample />
         <MultiExample />
         <CollectionExample />
         <CustomRenderExample />
-      </View>
+      </ScrollView>
     </PaperProvider>
   );
 };
@@ -84,7 +88,7 @@ const SimpleExample = () => {
         label="Example"
         options={simpleOptions}
         onSelection={(value) => setSelected(value)}
-        style={styles.formGroup}
+        style={styles.inputGroup}
       />
 
       <Text>Selected value: {selected}</Text>
@@ -106,7 +110,7 @@ const ControlledExample = () => {
         }))}
         value={selected}
         onValueChange={setSelected}
-        style={styles.formGroup}
+        style={styles.inputGroup}
       />
 
       <PaperSelect
@@ -115,7 +119,7 @@ const ControlledExample = () => {
         value={selected}
         noneOption={false}
         onSelection={(option) => option && setSelected(option)}
-        style={styles.formGroup}
+        style={styles.inputGroup}
       />
 
       <Text>Selected value: {selected}</Text>
@@ -125,19 +129,40 @@ const ControlledExample = () => {
 
 const MultiExample = () => {
   const [selected, setSelected] = React.useState<string[] | undefined>();
+  const [checkboxes, setCheckboxes] = React.useState(false);
+  const [modal, setModal] = React.useState<'modal' | 'dropdown'>('dropdown');
 
   return (
     <View style={styles.example}>
       <Text variant="headlineMedium">Multi-select Example</Text>
 
       <PaperSelect
-        multi
+        multi={checkboxes ? 'checkboxes' : true}
+        renderMenu={modal}
         label="Example"
         options={simpleOptions}
         defaultValue={selected}
-        onSelection={(values) => setSelected(values)}
-        style={styles.formGroup}
+        onSelection={setSelected}
+        style={styles.inputGroup}
       />
+
+      <View style={styles.rowGroup}>
+        <View style={styles.inputGroup}>
+          <Text variant="labelSmall">Checkboxes</Text>
+          <Switch
+            value={checkboxes}
+            onValueChange={() => setCheckboxes(!checkboxes)}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text variant="labelSmall">Modal</Text>
+          <Switch
+            value={modal === 'modal'}
+            onValueChange={(value) => setModal(value ? 'modal' : 'dropdown')}
+          />
+        </View>
+      </View>
 
       <Text>Selected value: {selected?.join(', ')}</Text>
     </View>
@@ -160,7 +185,7 @@ const CollectionExample = () => {
         valueFn={({ id }) => id}
         labelFn={({ text }) => text}
         onSelection={(option) => setSelected(option)}
-        style={styles.formGroup}
+        style={styles.inputGroup}
       />
 
       <Text>Selected value: {selected?.text}</Text>
@@ -255,7 +280,7 @@ const CustomRenderExample = () => {
         defaultValue={selected}
         onSelection={(values) => setSelected(values)}
         renderFn={renderChips}
-        style={styles.formGroup}
+        style={styles.inputGroup}
       />
 
       <Text>Selected value: {selected?.join(', ')}</Text>
@@ -266,18 +291,25 @@ const CustomRenderExample = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 32,
     paddingHorizontal: 16,
   },
+  screencontent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   example: {
-    flexShrink: 1,
+    flex: 1,
     alignItems: 'stretch',
     marginHorizontal: 16,
     marginBottom: 16,
   },
-  formGroup: {
-    marginVertical: 16,
+  inputGroup: {
+    marginEnd: 8,
+    marginBottom: 8,
+  },
+  rowGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 });
