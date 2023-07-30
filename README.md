@@ -1,17 +1,20 @@
 # @rcarls/react-native-paper-select
 
-A select-like dropdown input component for projects leveraging [react-native-paper](https://reactnativepaper.com/).
+A select-like input component for projects leveraging [react-native-paper](https://reactnativepaper.com/).
 
 ## What can it do?
 
-- Renders as a react-native-paper `TextInput` with an indicator arrow
-- Single-select via a `dropdown` or `modal` menu variant
+- Single or multi-select input that supports `undefined` value
+- Can be a controlled or uncontrolled input
+- Easy to use with sensible defaults, react-native-paper theme support
+- Accepts a render function for custom components
+- Has `dropdown` or `modal` menu variants
   - Default: `modal` in mobile environments, otherwise `dropdown`
-- Options can be any collection or array of strings
+- Options can be any collection, or simply an array of strings. For collections:
   - Default: Use `value`, `key` or `id` keys for option values
   - Default: Use `label` key for option label
-- Accepts a function to map options to values and labels
-- Uses current react-native-paper `ThemeContext` to fit your app theme
+  - Also accepts functions to map options to values and labels
+- `value` can be `undefined` with clear selection support
 
 ## Dependencies
 

@@ -1,8 +1,7 @@
 {
-  "private": "true",
   "name": "@rcarls/react-native-paper-select",
   "version": "0.1.0",
-  "description": "test",
+  "description": "A select-like input component for projects leveraging react-native-paper.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
