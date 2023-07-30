@@ -1,6 +1,6 @@
 {
   "name": "@rcarls/react-native-paper-select",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A select-like input component for projects leveraging react-native-paper.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
