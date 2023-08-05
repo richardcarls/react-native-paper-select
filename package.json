@@ -4,7 +4,7 @@
   "description": "A select-like input component for projects leveraging react-native-paper.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
-  "types": "lib/typescript/index.d.ts",
+  "types": "lib/typescript/src/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
   "files": [
@@ -87,9 +87,9 @@
     "@types/react": "^18.0.38"
   },
   "peerDependencies": {
-    "@expo/vector-icons": "^13.0.0",
-    "react": "^17.0.1",
-    "react-native": "^0.68.0",
+    "@expo/vector-icons": ">=13.0.0",
+    "react": ">=17.0.1",
+    "react-native": ">=0.68.0",
     "react-native-paper": "*",
     "react-native-safe-area-context": "*",
     "react-native-vector-icons": "*"
